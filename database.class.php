@@ -10,6 +10,7 @@ class MySQLDatabase
 {
     private $host = DB_HOST; // The hostname on which the database server resides.
     private $database = DB_NAME; // The name of the database.
+    private $database_engine = DB_ENGINE; // Specify the database engine
     private $charset = DB_CHARSET; // Specify the character encoding
     private $user = DB_USER; // The database username
     private $pass = DB_PASS; // The password corresponding to the database username
