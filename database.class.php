@@ -10,13 +10,11 @@ class MySQLDatabase
 {
     private $host = DB_HOST; // The hostname on which the database server resides.
     private $database = DB_NAME; // The name of the database.
-    private $database_engine = DB_ENGINE; // Specify the database engine
     private $charset = DB_CHARSET; // Specify the character encoding
+	private $database_engine = DB_ENGINE; // Specify the database engine
     private $user = DB_USER; // The database username
     private $pass = DB_PASS; // The password corresponding to the database username
     private $port = DB_PORT; // The port number where the database server is listening.
-
-
     private $isConnected = false; // Keep track of database connection
     private $hasExecuted = false; // To prevent double execution of same query
     private $options;
@@ -41,7 +39,6 @@ class MySQLDatabase
         );
 
         if (!empty($this->port)) {
-
             $this->dsn .= "port=$this->port;";
         }
 
@@ -88,6 +85,10 @@ class MySQLDatabase
 
         $this->connect();
         $this->stmt = $this->_connection->prepare($query);
+		/*
+         * Reset $hasExecuted to false since on new query
+         */
+        $this->hasExecuted = false;
     }
 
     /**
@@ -103,6 +104,14 @@ class MySQLDatabase
         }
     }
 
+    /**
+     * Close database connection
+     */
+    public function CloseConnection()
+    {
+        $this->_connection = null;
+        $this->isConnected = false;
+    }
 
     /**
      *
@@ -132,6 +141,14 @@ class MySQLDatabase
         $this->stmt->bindValue($param, $value, $type);
     }
 
+    /**
+     * @return An array containing many records
+     */
+    public function resultSet()
+    {
+        $this->execute();
+        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     /**
      * Execute the SQL query
@@ -145,16 +162,6 @@ class MySQLDatabase
             }
 
         }
-    }
-
-
-    /**
-     * @return An array containing many records
-     */
-    public function resultSet()
-    {
-        $this->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -186,14 +193,6 @@ class MySQLDatabase
         return $this->_connection->lastInsertId();
     }
 
-    private function notMyISAM()
-    {
-        if (strtolower($this->database_engine) == 'myisam') {
-            die("You need to change to a storage engine such as InnoDB as MyISAM storage engine does not support transaction.");
-        }
-        return true;
-    }
-
     /**
      * @return bool
      * Transactions allows you to run multiple changes to a database all in one batch
@@ -206,6 +205,14 @@ class MySQLDatabase
             return $this->_connection->beginTransaction();
         }
 
+    }
+
+    private function notMyISAM()
+    {
+        if (strtolower($this->database_engine) == 'myisam') {
+            die("You need to change to a storage engine such as InnoDB as MyISAM storage engine does not support transaction.");
+        }
+        return true;
     }
 
     /**
@@ -241,16 +248,6 @@ class MySQLDatabase
     public function debugDumpParams()
     {
         return $this->stmt->debugDumpParams();
-    }
-
-
-    /**
-     * Close database connection
-     */
-    public function CloseConnection()
-    {
-        $this->_connection = null;
-        $this->isConnected = false;
     }
 
 }
