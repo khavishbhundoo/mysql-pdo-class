@@ -11,10 +11,10 @@ class MySQLDatabase
     private $host = DB_HOST; // The hostname on which the database server resides.
     private $database = DB_NAME; // The name of the database.
     private $charset = DB_CHARSET; // Specify the character encoding
-	private $database_engine = DB_ENGINE; // Specify the database engine
+    private $database_engine = DB_ENGINE; // Specify the database engine
     private $user = DB_USER; // The database username
     private $pass = DB_PASS; // The password corresponding to the database username
-    private $port = DB_PORT; // The port number where the database server is listening.
+    private $port;// The port number where the MySQL is listening.
     private $isConnected = false; // Keep track of database connection
     private $hasExecuted = false; // To prevent double execution of same query
     private $options;
@@ -38,7 +38,9 @@ class MySQLDatabase
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         );
 
-        if (!empty($this->port)) {
+
+        if (defined('DB_PORT') && !empty(DB_PORT)) {
+            $this->port = DB_PORT;
             $this->dsn .= "port=$this->port;";
         }
 
@@ -77,25 +79,13 @@ class MySQLDatabase
         }
     }
 
-    /**
-     * @param $query Set the database query
-     */
-    public function query($query)
-    {
-
-        $this->connect();
-        $this->stmt = $this->_connection->prepare($query);
-		/*
-         * Reset $hasExecuted to false since on new query
-         */
-        $this->hasExecuted = false;
-    }
 
     /**
      * @param $options Allows users to parse their own options
      * $options must be an array
      */
-    public function setOptions(array $options) {
+    public function setOptions(array $options)
+    {
         if ($this->isConnected) {
             $this->CloseConnection();
         } else {
@@ -104,13 +94,19 @@ class MySQLDatabase
         }
     }
 
+
     /**
-     * Close database connection
+     * @param $query Set the database query
      */
-    public function CloseConnection()
+    public function query($query)
     {
-        $this->_connection = null;
-        $this->isConnected = false;
+
+        $this->connect();
+        $this->stmt = $this->_connection->prepare($query);
+        /*
+         * Reset $hasExecuted to false since its a new query
+         */
+        $this->hasExecuted = false;
     }
 
     /**
@@ -141,14 +137,6 @@ class MySQLDatabase
         $this->stmt->bindValue($param, $value, $type);
     }
 
-    /**
-     * @return An array containing many records
-     */
-    public function resultSet()
-    {
-        $this->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
 
     /**
      * Execute the SQL query
@@ -172,6 +160,16 @@ class MySQLDatabase
         $this->execute();
         return $this->stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * @return An array containing multiple records
+     */
+    public function resultSet()
+    {
+        $this->execute();
+        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
     /**
      * @return The number of rows affected by the last SQL statement
@@ -207,6 +205,11 @@ class MySQLDatabase
 
     }
 
+    /*
+    * @return bool
+    * Returns true if database engine is NOT MyISAM
+    * Otherwise it dies (since MyISAM does NOT support transactions) and show corresponding  error
+    */
     private function notMyISAM()
     {
         if (strtolower($this->database_engine) == 'myisam') {
@@ -230,7 +233,7 @@ class MySQLDatabase
 
     /**
      * @return bool
-     * Make a transaction permanent
+     * Make a transaction permanent(i.e commit to the database)
      */
     public function commitTransaction()
     {
@@ -248,6 +251,15 @@ class MySQLDatabase
     public function debugDumpParams()
     {
         return $this->stmt->debugDumpParams();
+    }
+
+    /**
+     * Close database connection
+     */
+    public function CloseConnection()
+    {
+        $this->_connection = null;
+        $this->isConnected = false;
     }
 
 }
