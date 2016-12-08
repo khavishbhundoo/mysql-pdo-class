@@ -208,12 +208,12 @@ class MySQLDatabase
     /*
     * @return bool
     * Returns true if database engine is NOT MyISAM
-    * Otherwise it dies (since MyISAM does NOT support transactions) and show corresponding  error
+    * Otherwise it throw  DomainExceptio (since MyISAM does NOT support transactions) and show corresponding  error
     */
     private function notMyISAM()
     {
         if (strtolower($this->database_engine) == 'myisam') {
-            die("You need to change to a storage engine such as InnoDB as MyISAM storage engine does not support transaction.");
+            throw new DomainException("You need to change to a storage engine such as InnoDB as MyISAM storage engine does not support transaction.");
         }
         return true;
     }
