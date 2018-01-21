@@ -9,7 +9,9 @@ A database class making use of PDO for MySQL written in PHP
 
 3.Supports Transactions. Transactions allows you to run multiple changes to a database all in one batch
 
-4.Contains a set of helper methods 
+4.Contains a set of helper methods
+
+5.Full support for PHP 5.6/7.x
 
 # Methods 
 
